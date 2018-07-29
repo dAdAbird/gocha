@@ -39,15 +39,17 @@ func (c *connection) Process(cmds *CommadsSet) {
 				log.Println("closing connection:", err)
 			}
 
+			// fmt.Printf("debug: %s\n", msg)
+
 			runCmd, args, err := cmds.Parse(msg)
 			if err != nil {
-				c.SendString(fmt.Sprintf("ER %v\n", err))
+				c.SendString(fmt.Sprintf("ERR %v\n", err))
 				continue
 			}
 
 			resp, err := runCmd(c, args)
 			if err != nil {
-				c.SendString(fmt.Sprintf("ER %v\n", err))
+				c.SendString(fmt.Sprintf("ERR %v\n", err))
 				continue
 			}
 
