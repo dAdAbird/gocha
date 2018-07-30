@@ -9,10 +9,10 @@ SRV_SRC_FILES = $(filter-out %_test.go, $(wildcard cmd/server/*.go))
 .PHONY: build-all build-cli build-srv
 build-all: build-cli build-srv
 build-cli:
-	go build -ldflags "-X main.GitCommit=$(GITCOMMIT) -X main.BuildTime=$(BUILDTIME) -X main.Version=$(VERSION)" \
+	go build -ldflags "-X main.gitCommit=$(GITCOMMIT) -X main.buildTime=$(BUILDTIME) -X main.version=$(VERSION)" \
 		-v -o bin/gocha-cli ./cmd/client/
 build-srv:
-	go build -ldflags "-X main.GitCommit=$(GITCOMMIT) -X main.BuildTime=$(BUILDTIME) -X main.Version=$(VERSION)" \
+	go build -ldflags "-X main.gitCommit=$(GITCOMMIT) -X main.buildTime=$(BUILDTIME) -X main.version=$(VERSION)" \
 		-v -o bin/gocha-srv ./cmd/server/
 
 .PHONY: tests

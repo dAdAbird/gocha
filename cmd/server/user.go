@@ -20,6 +20,11 @@ func NewUser(name string) *User {
 	}
 }
 
+// AddClient appends new Client to users pool
+func (u *User) AddClient(c *Client) {
+	u.conns.Add(c)
+}
+
 // connections pool
 // is a abstraction that keeps users' connections
 type cPool struct {

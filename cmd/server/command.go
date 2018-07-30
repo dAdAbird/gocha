@@ -90,8 +90,8 @@ func cmdAuth(c *Client, name []byte) (resp string, err error) {
 
 	if c.state&scAuth == 0 {
 		c.user = NewUser(string(name))
-		// TODO
-		c.user.conns.Add(c)
+		// c.user.conns.Add(c)
+		c.user.AddClient(c)
 
 		resp = c.currChannel.name + ": "
 		for _, u := range c.currChannel.Users() {

@@ -69,6 +69,8 @@ func (c *Channel) send(msg []byte, from *Client) {
 		for conn := range u.conns.c {
 			// don't send message to sender
 			if conn != from {
+				fmt.Printf("SEND: %s\n", msg)
+
 				_, err := conn.Send(msg)
 				if err != nil {
 					// kick the connection on error

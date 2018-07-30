@@ -9,9 +9,9 @@ import (
 )
 
 var (
-	GitCommit string
-	BuildTime string
-	Version   string
+	gitCommit string
+	buildTime string
+	version   string
 
 	listenOn    = flag.String("h", ":1313", "Chat server host")
 	showVersion = flag.Bool("version", false, "show version and exit")
@@ -21,7 +21,7 @@ func main() {
 	flag.Parse()
 
 	if *showVersion {
-		fmt.Printf("Version: %s\nBuild time: %s\nCommit: %s\n", Version, BuildTime, GitCommit)
+		fmt.Printf("Version: %s\nBuild time: %s\nCommit: %s\n", version, buildTime, gitCommit)
 		os.Exit(0)
 	}
 

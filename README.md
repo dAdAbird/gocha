@@ -7,3 +7,8 @@ make build-all
 bin/gocha-srv &
 bin/gocha-cli
 ```
+
+## Tests
+```
+make tests
+```

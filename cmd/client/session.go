@@ -51,7 +51,7 @@ func (s *Session) Process(cmds *ResponsesSet) {
 					conn, err := s.connect(5)
 					if err != nil {
 						respError(s, []byte("failed to reconnect to server,\n\ttry again later\n"))
-						break
+						return
 					}
 					s.setConn(conn)
 					respMsg(s, []byte("*** connection established"))
@@ -66,13 +66,13 @@ func (s *Session) Process(cmds *ResponsesSet) {
 
 				runCmd, args, err := cmds.Parse(data)
 				if err != nil {
-					log.Println("\nUnknown responce type:", err)
+					log.Println("\nUnknown response type:", err)
 					continue
 				}
 
 				err = runCmd(s, args)
 				if err != nil {
-					log.Println("\nWrong responce:", err)
+					log.Println("\nWrong response:", err)
 					continue
 				}
 			}
