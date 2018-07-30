@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"sync"
 )
 
 type cstate int
@@ -16,30 +15,32 @@ const (
 	scClosed
 )
 
-type connection struct {
-	c           net.Conn
-	state       cstate // auth, close, err, slow
-	user        *user
+// Client represents the client connection
+type Client struct {
+	conn        net.Conn
+	state       cstate // auth, closed etc.
+	user        *User
 	currChannel *Channel
-	colse       chan struct{}
+	colse       chan error
 }
 
-func (c *connection) Process(cmds *CommadsSet) {
-	reader := bufio.NewReader(c.c)
+// Handle process the client connection
+func (c *Client) Handle(cmds *CommadsSet) {
+	reader := bufio.NewReader(c.conn)
 	for {
 		select {
-		case <-c.colse:
-			// fmt.Printf("Closing: %v", c)
+		case cerr := <-c.colse:
+			if cerr != nil {
+				log.Println("Closing connection because of:", cerr)
+			}
+			_, err := cmdQuit(c, nil)
+			log.Println("Connection closed:", err)
 			return
 		default:
 			msg, err := reader.ReadBytes('\n')
 			if err != nil {
-				log.Println("stream read error:", err)
-				_, err := CmdQuit(c, nil)
-				log.Println("closing connection:", err)
+				c.colse <- fmt.Errorf("stream read error: %v", err)
 			}
-
-			// fmt.Printf("debug: %s\n", msg)
 
 			runCmd, args, err := cmds.Parse(msg)
 			if err != nil {
@@ -58,35 +59,12 @@ func (c *connection) Process(cmds *CommadsSet) {
 	}
 }
 
-func (c *connection) SendString(msg string) (int, error) {
+// SendString msg to client
+func (c *Client) SendString(msg string) (int, error) {
 	return c.Send([]byte(msg))
 }
 
-func (c *connection) Send(msg []byte) (int, error) {
-	// TODO Check errors and close connection
-	return c.c.Write(msg)
-}
-
-type cPool struct {
-	mx sync.Mutex
-	c  map[*connection]struct{}
-}
-
-func (p *cPool) Add(c *connection) {
-	p.mx.Lock()
-	p.c[c] = struct{}{}
-	p.mx.Unlock()
-}
-
-func (p *cPool) Len() int {
-	p.mx.Lock()
-	defer p.mx.Unlock()
-	return len(p.c)
-}
-
-func (p *cPool) Delete(c *connection) int {
-	p.mx.Lock()
-	defer p.mx.Unlock()
-	delete(p.c, c)
-	return len(p.c)
+// Send msg to client
+func (c *Client) Send(msg []byte) (int, error) {
+	return c.conn.Write(msg)
 }

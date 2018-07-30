@@ -1,54 +1,51 @@
 package main
 
 import (
-	"errors"
 	"sync"
 )
 
-type user struct {
-	id    int
+// User is chat user representation
+type User struct {
 	name  string
 	conns cPool
 }
 
-var ErrUserNoName = errors.New("user name doesn't provided")
-
-type users struct {
-	mx   sync.Mutex
-	pool map[string]*user
-}
-
-var connectedUsers users
-
-func init() {
-	connectedUsers.pool = make(map[string]*user)
-}
-
-func (us *users) Remove(name string) {
-	us.mx.Lock()
-	delete(us.pool, name)
-	us.mx.Unlock()
-}
-
-func (us *users) Get(u *user) {
-
-}
-
-func (us *users) Add(name string, c *connection) *user {
-	us.mx.Lock()
-	defer us.mx.Unlock()
-
-	u, ok := us.pool[name]
-	if !ok {
-		u = &user{
-			name: name,
-			conns: cPool{
-				c: make(map[*connection]struct{}),
-			},
-		}
+// NewUser creates and returns new user by a given name
+func NewUser(name string) *User {
+	return &User{
+		name: name,
+		conns: cPool{
+			c: make(map[*Client]struct{}),
+		},
 	}
-	u.conns.Add(c)
-	us.pool[name] = u
+}
 
-	return us.pool[name]
+// connections pool
+// is a abstraction that keeps users' connections
+type cPool struct {
+	mx sync.Mutex
+	c  map[*Client]struct{}
+}
+
+// Add adds a new connection to pool
+func (p *cPool) Add(c *Client) {
+	p.mx.Lock()
+	p.c[c] = struct{}{}
+	p.mx.Unlock()
+}
+
+// Len returns the pool's length
+func (p *cPool) Len() int {
+	p.mx.Lock()
+	defer p.mx.Unlock()
+	return len(p.c)
+}
+
+// Delete removes connection from pool and
+// returns the remained connections count
+func (p *cPool) Delete(c *Client) int {
+	p.mx.Lock()
+	defer p.mx.Unlock()
+	delete(p.c, c)
+	return len(p.c)
 }

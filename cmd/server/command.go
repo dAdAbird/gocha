@@ -3,12 +3,14 @@ package main
 import (
 	"bytes"
 	"errors"
+	"fmt"
 )
 
-type cmdAction func(c *connection, b []byte) (resp string, err error)
+// CmdHandler represents the handler for command
+type CmdHandler func(c *Client, b []byte) (resp string, err error)
 
-func cmdWrapAuth(f cmdAction) cmdAction {
-	return func(c *connection, msg []byte) (resp string, err error) {
+func cmdWrapAuth(f CmdHandler) CmdHandler {
+	return func(c *Client, msg []byte) (resp string, err error) {
 		if c.state&scAuth == 0 {
 			return "", ErrUnauthUser
 		}
@@ -16,15 +18,19 @@ func cmdWrapAuth(f cmdAction) cmdAction {
 	}
 }
 
-type CommadsSet map[string]cmdAction
+// CommadsSet contaign registred commands
+type CommadsSet map[string]CmdHandler
 
-func (cs CommadsSet) Register(name string, action cmdAction) {
+// Register adds a new command into set
+func (cs CommadsSet) Register(name string, action CmdHandler) {
 	cs[name] = action
 }
 
-var ErrNoCommandSet = errors.New("no command set")
+// ErrNoCommand error for undefined commans
+var ErrNoCommand = errors.New("no command found")
 
-func (cs CommadsSet) Parse(msg []byte) (cmd cmdAction, args []byte, err error) {
+// Parse parses the command from msg and return command Handler and Args
+func (cs CommadsSet) Parse(msg []byte) (cmd CmdHandler, args []byte, err error) {
 	msg = bytes.TrimSpace(msg)
 	cmdName := msg
 	pos := bytes.IndexByte(msg, ' ')
@@ -39,10 +45,13 @@ func (cs CommadsSet) Parse(msg []byte) (cmd cmdAction, args []byte, err error) {
 		}
 		return run, args, nil
 	}
-	return nil, nil, ErrNoCommandSet
+	return nil, nil, ErrNoCommand
 }
 
-func CmdSend(c *connection, msg []byte) (resp string, err error) {
+// Commands' handler fnctions.
+// It sould be associated with text command and
+// registred in CommadsSet
+func cmdSend(c *Client, msg []byte) (resp string, err error) {
 	send := bytes.NewBuffer(nil)
 	send.Grow(4 + len(c.user.name) + len(msg) + 3) // :\t\n
 	send.WriteString("MSG ")
@@ -56,7 +65,7 @@ func CmdSend(c *connection, msg []byte) (resp string, err error) {
 	return "", nil
 }
 
-func CmdQuit(c *connection, _ []byte) (resp string, err error) {
+func cmdQuit(c *Client, _ []byte) (resp string, err error) {
 	if c.state&scAuth != 0 {
 		left := c.user.conns.Delete(c)
 		if left == 0 {
@@ -67,19 +76,22 @@ func CmdQuit(c *connection, _ []byte) (resp string, err error) {
 	}
 
 	c.state |= scClosed
-	c.colse <- struct{}{}
-	return resp, c.c.Close()
+	c.colse <- fmt.Errorf("recieved QUIT from client")
+	return resp, c.conn.Close()
 }
 
+// ErrUnauthUser - user unauthorised
 var ErrUnauthUser = errors.New("user unknown")
 
-func CmdAuth(c *connection, name []byte) (resp string, err error) {
+func cmdAuth(c *Client, name []byte) (resp string, err error) {
 	if len(name) == 0 {
-		return "", ErrUserNoName
+		return "", errors.New("no user name")
 	}
 
 	if c.state&scAuth == 0 {
-		c.user = connectedUsers.Add(string(name), c)
+		c.user = NewUser(string(name))
+		// TODO
+		c.user.conns.Add(c)
 
 		resp = c.currChannel.name + ": "
 		for _, u := range c.currChannel.Users() {

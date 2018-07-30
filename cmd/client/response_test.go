@@ -7,15 +7,15 @@ import (
 )
 
 func TestCommandsParse(t *testing.T) {
-	cmds := make(CommadsSet)
-	cmdTest := func(_ *Client, _ []byte) (resp string, err error) {
-		return "", nil
+	cmds := make(ResponsesSet)
+	cmdTest := func(_ *Session, _ []byte) error {
+		return nil
 	}
 	cmds.Register("TEST", cmdTest)
 
 	cases := []struct {
 		data       []byte
-		shouldCmd  CmdHandler
+		shouldCmd  RespHandler
 		shouldArgs []byte
 		shouldErr  error
 	}{
