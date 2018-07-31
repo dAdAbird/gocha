@@ -25,7 +25,7 @@ func (c *Channel) Register(u *User) {
 	c.mx.Lock()
 	if _, ok := c.users[u]; !ok {
 		// send notification to other users
-		c.send([]byte(fmt.Sprintf("INFO *** %s is online\n", u.name)), nil)
+		c.send([]byte(fmt.Sprintf("INFO *** %s is online\n", u.Name)), nil)
 		c.users[u] = struct{}{}
 	}
 	c.mx.Unlock()
@@ -38,7 +38,7 @@ func (c *Channel) UnRegister(u *User) {
 	c.mx.Unlock()
 
 	// send notification to other users
-	c.SendString(fmt.Sprintf("INFO *** %s is offline\n", u.name), nil)
+	c.SendString(fmt.Sprintf("INFO *** %s is offline\n", u.Name), nil)
 }
 
 // Users returns list of users in chanel
@@ -66,7 +66,7 @@ func (c *Channel) Send(msg []byte, from *Client) {
 
 func (c *Channel) send(msg []byte, from *Client) {
 	for u := range c.users {
-		for conn := range u.conns.c {
+		for _, conn := range u.Conns.Get() {
 			// don't send message to sender
 			if conn != from {
 				// fmt.Printf("SEND: %s\n", msg)

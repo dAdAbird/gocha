@@ -9,6 +9,10 @@ import (
 // CmdHandler represents the handler for command
 type CmdHandler func(c *Client, b []byte) (resp string, err error)
 
+// ErrUnauthUser - user unauthorised
+var ErrUnauthUser = errors.New("user unknown")
+
+// cmd wrapper function for auth checks
 func cmdWrapAuth(f CmdHandler) CmdHandler {
 	return func(c *Client, msg []byte) (resp string, err error) {
 		if c.state&scAuth == 0 {
@@ -53,9 +57,9 @@ func (cs CommadsSet) Parse(msg []byte) (cmd CmdHandler, args []byte, err error) 
 // registred in CommadsSet
 func cmdSend(c *Client, msg []byte) (resp string, err error) {
 	send := bytes.NewBuffer(nil)
-	send.Grow(4 + len(c.user.name) + len(msg) + 3) // :\t\n
+	send.Grow(4 + len(c.user.Name) + len(msg) + 3) // :\t\n
 	send.WriteString("MSG ")
-	send.WriteString(c.user.name)
+	send.WriteString(c.user.Name)
 	send.WriteByte(':')
 	send.WriteByte('\t')
 	send.Write(msg)
@@ -67,7 +71,7 @@ func cmdSend(c *Client, msg []byte) (resp string, err error) {
 
 func cmdQuit(c *Client, _ []byte) (resp string, err error) {
 	if c.state&scAuth != 0 {
-		left := c.user.conns.Delete(c)
+		left := c.user.Conns.Delete(c)
 		if left == 0 {
 			c.currChannel.UnRegister(c.user)
 			UserLogout(c.user)
@@ -81,9 +85,6 @@ func cmdQuit(c *Client, _ []byte) (resp string, err error) {
 	return resp, c.conn.Close()
 }
 
-// ErrUnauthUser - user unauthorised
-var ErrUnauthUser = errors.New("user unknown")
-
 func cmdAuth(c *Client, name []byte) (resp string, err error) {
 	if len(name) == 0 {
 		return "", errors.New("no user name")
@@ -94,7 +95,7 @@ func cmdAuth(c *Client, name []byte) (resp string, err error) {
 
 		resp = c.currChannel.name + ": "
 		for _, u := range c.currChannel.Users() {
-			resp += u.name + ", "
+			resp += u.Name + ", "
 		}
 
 		c.currChannel.Register(c.user)

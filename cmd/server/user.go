@@ -6,8 +6,8 @@ import (
 
 // User is chat user representation
 type User struct {
-	name  string
-	conns cPool
+	Name  string
+	Conns cPool
 }
 
 type users struct {
@@ -15,6 +15,7 @@ type users struct {
 	pool map[string]*User
 }
 
+// global users pool
 var connectedUsers users
 
 func init() {
@@ -28,7 +29,7 @@ func UserAuth(name string, c *Client) *User {
 
 // UserLogout removes user from server
 func UserLogout(u *User) {
-	connectedUsers.remove(u.name)
+	connectedUsers.remove(u.Name)
 }
 
 func (us *users) addOrGet(name string, c *Client) *User {
@@ -38,13 +39,13 @@ func (us *users) addOrGet(name string, c *Client) *User {
 	u, ok := us.pool[name]
 	if !ok {
 		u = &User{
-			name: name,
-			conns: cPool{
+			Name: name,
+			Conns: cPool{
 				c: make(map[*Client]struct{}),
 			},
 		}
 	}
-	u.conns.Add(c)
+	u.Conns.Add(c)
 	us.pool[name] = u
 
 	return us.pool[name]
@@ -68,6 +69,17 @@ func (p *cPool) Add(c *Client) {
 	p.mx.Lock()
 	p.c[c] = struct{}{}
 	p.mx.Unlock()
+}
+
+// Get returns slice of avaliable connections
+func (p *cPool) Get() []*Client {
+	var clients []*Client
+	p.mx.Lock()
+	for u := range p.c {
+		clients = append(clients, u)
+	}
+	p.mx.Unlock()
+	return clients
 }
 
 // Len returns the pool's length
