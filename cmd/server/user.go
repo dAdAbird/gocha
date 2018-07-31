@@ -71,7 +71,7 @@ func (p *cPool) Add(c *Client) {
 	p.mx.Unlock()
 }
 
-// Get returns slice of avaliable connections
+// Get returns slice of available connections
 func (p *cPool) Get() []*Client {
 	var clients []*Client
 	p.mx.Lock()
