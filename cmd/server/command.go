@@ -77,7 +77,7 @@ func cmdQuit(c *Client, _ []byte) (resp string, err error) {
 	}
 
 	c.state |= scClosed
-	c.colse <- fmt.Errorf("recieved QUIT from client")
+	c.colse <- fmt.Errorf("received QUIT from client")
 	return resp, c.conn.Close()
 }
 
