@@ -9,19 +9,6 @@ import (
 // CmdHandler represents the handler for command
 type CmdHandler func(c *Client, b []byte) (resp string, err error)
 
-// ErrUnauthUser - user unauthorised
-var ErrUnauthUser = errors.New("user unknown")
-
-// cmd wrapper function for auth checks
-func cmdWrapAuth(f CmdHandler) CmdHandler {
-	return func(c *Client, msg []byte) (resp string, err error) {
-		if c.state&scAuth == 0 {
-			return "", ErrUnauthUser
-		}
-		return f(c, msg)
-	}
-}
-
 // CommadsSet contaign registred commands
 type CommadsSet map[string]CmdHandler
 
@@ -107,4 +94,17 @@ func cmdAuth(c *Client, name []byte) (resp string, err error) {
 		return resp, nil
 	}
 	return "", errors.New("that's not your name")
+}
+
+// ErrUnauthUser - user unauthorised
+var ErrUnauthUser = errors.New("user unknown")
+
+// cmd wrapper function for auth checks
+func cmdWrapAuth(f CmdHandler) CmdHandler {
+	return func(c *Client, msg []byte) (resp string, err error) {
+		if c.state&scAuth == 0 {
+			return "", ErrUnauthUser
+		}
+		return f(c, msg)
+	}
 }
