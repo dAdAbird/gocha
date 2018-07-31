@@ -67,7 +67,7 @@ func signalsHandler(s *Session) {
 
 	go func() {
 		sig := <-c
-		fmt.Printf("\nSignal %v was recived, closing connection to server\n", sig)
+		fmt.Printf("\nSignal %v was received, closing connection to server\n", sig)
 		s.close <- struct{}{}
 		fmt.Println("BYE!")
 		os.Exit(0)

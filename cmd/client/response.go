@@ -16,7 +16,7 @@ func (cs ResponsesSet) Register(name string, action RespHandler) {
 	cs[name] = action
 }
 
-// ErrNoCommand error for undefined commans
+// ErrNoCommand error for undefined commands
 var ErrNoCommand = errors.New("no command found")
 
 // Parse parses the command from msg and return command Handler and Args
@@ -39,7 +39,7 @@ func (cs ResponsesSet) Parse(msg []byte) (cmd RespHandler, args []byte, err erro
 }
 
 // Commands' handler fnctions.
-// It sould be associated with text command and
+// It should be associated with text command and
 // registred in CommadsSet
 func respMsg(c *Session, msg []byte) error {
 	c.cliWriter.WriteByte('\n')

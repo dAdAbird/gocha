@@ -26,7 +26,7 @@ func (cs CommadsSet) Register(name string, action CmdHandler) {
 	cs[name] = action
 }
 
-// ErrNoCommand error for undefined commans
+// ErrNoCommand error for undefined commands
 var ErrNoCommand = errors.New("no command found")
 
 // Parse parses the command from msg and return command Handler and Args
@@ -49,7 +49,7 @@ func (cs CommadsSet) Parse(msg []byte) (cmd CmdHandler, args []byte, err error) 
 }
 
 // Commands' handler fnctions.
-// It sould be associated with text command and
+// It should be associated with text command and
 // registred in CommadsSet
 func cmdSend(c *Client, msg []byte) (resp string, err error) {
 	send := bytes.NewBuffer(nil)
