@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"time"
 )
 
 type cstate int
@@ -41,6 +42,8 @@ func (c *Client) Handle(cmds *CommadsSet) {
 			if err != nil {
 				c.colse <- fmt.Errorf("stream read error: %v", err)
 			}
+
+			c.conn.SetDeadline(time.Now().Add(15 * time.Minute))
 
 			runCmd, args, err := cmds.Parse(msg)
 			if err != nil {

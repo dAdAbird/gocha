@@ -91,6 +91,7 @@ func (s *Session) Process(cmds *ResponsesSet) {
 		text, err := s.cliReader.ReadBytes('\n')
 		if err != nil {
 			s.cliWriter.WriteString("unable to read from console")
+			s.cliWriter.Flush()
 			continue
 		}
 		if len(bytes.TrimSpace(text)) > 0 {
@@ -99,6 +100,9 @@ func (s *Session) Process(cmds *ResponsesSet) {
 			if err != nil {
 				respError(s, []byte(err.Error()))
 			}
+		} else {
+			s.cliWriter.WriteString(s.bar())
+			s.cliWriter.Flush()
 		}
 	}
 }

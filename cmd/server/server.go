@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"time"
 )
 
 var (
@@ -46,6 +47,8 @@ func main() {
 			log.Println("Error while connection accept:", err)
 			continue
 		}
+
+		conn.SetDeadline(time.Now().Add(15 * time.Minute))
 
 		go func(c net.Conn) {
 			cn := Client{
