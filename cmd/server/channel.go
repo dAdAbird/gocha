@@ -23,8 +23,8 @@ func NewChannel(name string) Channel {
 // Register adds user into channel
 func (c *Channel) Register(u *User) {
 	c.mx.Lock()
-	// send notification to other users
 	if _, ok := c.users[u]; !ok {
+		// send notification to other users
 		c.send([]byte(fmt.Sprintf("INFO *** %s is online\n", u.name)), nil)
 		c.users[u] = struct{}{}
 	}
@@ -69,11 +69,10 @@ func (c *Channel) send(msg []byte, from *Client) {
 		for conn := range u.conns.c {
 			// don't send message to sender
 			if conn != from {
-				fmt.Printf("SEND: %s\n", msg)
-
+				// fmt.Printf("SEND: %s\n", msg)
 				_, err := conn.Send(msg)
 				if err != nil {
-					// kick the connection on error
+					// kick off the connection on error
 					conn.colse <- fmt.Errorf("unable to send message: %v", err)
 				}
 			}

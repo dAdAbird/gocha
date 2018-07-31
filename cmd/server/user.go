@@ -10,19 +10,50 @@ type User struct {
 	conns cPool
 }
 
-// NewUser creates and returns new user by a given name
-func NewUser(name string) *User {
-	return &User{
-		name: name,
-		conns: cPool{
-			c: make(map[*Client]struct{}),
-		},
-	}
+type users struct {
+	mx   sync.Mutex
+	pool map[string]*User
 }
 
-// AddClient appends new Client to users pool
-func (u *User) AddClient(c *Client) {
+var connectedUsers users
+
+func init() {
+	connectedUsers.pool = make(map[string]*User)
+}
+
+// UserAuth authorise user on server
+func UserAuth(name string, c *Client) *User {
+	return connectedUsers.addOrGet(name, c)
+}
+
+// UserLogout removes user from server
+func UserLogout(u *User) {
+	connectedUsers.remove(u.name)
+}
+
+func (us *users) addOrGet(name string, c *Client) *User {
+	us.mx.Lock()
+	defer us.mx.Unlock()
+
+	u, ok := us.pool[name]
+	if !ok {
+		u = &User{
+			name: name,
+			conns: cPool{
+				c: make(map[*Client]struct{}),
+			},
+		}
+	}
 	u.conns.Add(c)
+	us.pool[name] = u
+
+	return us.pool[name]
+}
+
+func (us *users) remove(name string) {
+	us.mx.Lock()
+	delete(us.pool, name)
+	us.mx.Unlock()
 }
 
 // connections pool

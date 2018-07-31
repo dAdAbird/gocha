@@ -18,11 +18,11 @@ func TestChannelAdd(t *testing.T) {
 	for i := 0; i < addCnt; i++ {
 		wg.Add(1)
 		go func() {
-			chn.Register(NewUser(fmt.Sprintf("user%d", rand.Intn(1e3))))
+			chn.Register(UserAuth(fmt.Sprintf("user%d", rand.Intn(1e3)), &Client{conn: &net.TCPConn{}, colse: make(chan error, 3e2)}))
 			wg.Done()
 		}()
 		// check for races
-		u := NewUser("user")
+		u := UserAuth(fmt.Sprintf("user_%d", rand.Intn(1e3)), &Client{conn: &net.TCPConn{}, colse: make(chan error, 3e2)})
 		chn.Register(u)
 		chn.UnRegister(u)
 	}
@@ -36,14 +36,11 @@ func TestChannelAdd(t *testing.T) {
 
 func TestChannelBroadcast(t *testing.T) {
 
-	result := `INFO *** testuser is online
-MSG testuser:	Hello
-INFO *** testuser is online
-MSG testuser:	Hello
-INFO *** testuser is online
-MSG testuser:	Hello
-INFO *** testuser is online
-MSG testuser:	Hello
+	result := `INFO *** testuser1 is online
+MSG testuser1:	Hello
+MSG testuser0:	Hello
+MSG testuser1:	Hello
+MSG testuser0:	Hello
 `
 
 	l, err := net.Listen("tcp", ":13131")
@@ -69,8 +66,7 @@ MSG testuser:	Hello
 				currChannel: &chn,
 			}
 
-			// _, err = cmdAuth(cns[i], []byte(fmt.Sprintf("testuser%d", rand.Intn(1e2))))
-			_, err = cmdAuth(cns[i], []byte("testuser"))
+			_, err = cmdAuth(cns[i], []byte(fmt.Sprintf("testuser%d", i%2)))
 			if err != nil {
 				t.Fatal("unable to AUTH", err)
 			}

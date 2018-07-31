@@ -70,6 +70,7 @@ func cmdQuit(c *Client, _ []byte) (resp string, err error) {
 		left := c.user.conns.Delete(c)
 		if left == 0 {
 			c.currChannel.UnRegister(c.user)
+			UserLogout(c.user)
 		}
 
 		c.SendString("BYE!\n")
@@ -89,9 +90,7 @@ func cmdAuth(c *Client, name []byte) (resp string, err error) {
 	}
 
 	if c.state&scAuth == 0 {
-		c.user = NewUser(string(name))
-		// c.user.conns.Add(c)
-		c.user.AddClient(c)
+		c.user = UserAuth(string(name), c)
 
 		resp = c.currChannel.name + ": "
 		for _, u := range c.currChannel.Users() {
